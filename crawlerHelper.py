@@ -2,8 +2,7 @@ from bs4 import BeautifulSoup
 import requests
 from concurrent.futures import ThreadPoolExecutor
 
-
-def getStock(url):
+def get_stock(url):
     web = requests.get(url)
     soup = BeautifulSoup(web.text, "html.parser")
     error = None
@@ -11,44 +10,33 @@ def getStock(url):
         error = url + "/Error"
         return error
     company = soup.select('h1')[1].get_text()
-    quote = soup.find('span', {'class': 'Fz(32px)'}).get_text()
+    quote = soup.find('span', {'class': 'Fz(32px)'})
     difference = soup.find('span', {'class': 'Fz(20px)'}).get_text()
-    isUpOrDown = ''
-    try:
-        if quote.select('.C($c-trend-down)')[0]:
-            isUpOrDown = '-'
-    except:
-        try:
-            if quote.select('.C($c-trend-up)')[0]:
-                isUpOrDown = '+'
-        except:
-            isUpOrDown = '-'
 
-        return (f'{ company } : { quote } ( { isUpOrDown }{ difference } )')
+    up_or_down = ''
+    if "C($c-trend-up)" in quote.attrs["class"]:
+        up_or_down = '+'
+    elif "C($c-trend-down)" in quote.attrs["class"]:
+        up_or_down = '-'
+    else : 
+        up_or_down = '-'
 
+    return (f'{ company } : { quote.get_text() } ( { up_or_down }{ difference } )')
 
 def get_error(url):
-    error = ""
     if "Error" in url:
         return url.split('/')[4]
     
-
-
 def map_together(func, lst):
     data = []
     executor = ThreadPoolExecutor()
     with ThreadPoolExecutor() as executor:
         data = list(executor.map(func, lst))
-        # data = list(filter(None, list(executor.map(func, lst))))
-        # data = executor.map(func, lst)
-    #data = [i for i in data if i != None]
     return data
-
 
 def get_url(codes):
     url = 'https://tw.stock.yahoo.com/quote/'
     return f'{url}{codes}'
-
 
 def get_value_from_request(request):
     lst = []
