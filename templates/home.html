@@ -1,9 +1,31 @@
 {% extends "base.html" %}
+
 {% block main %}
-<ul>
-{% for item in data %}
-<li>{{ item }}</li>
-{% endfor %}
+<a href="/stock/setting" class="btn btn-dark mx-3 my-1 p-1 px-2"> 設定 </a>
+<ul class="list-group list-group-flush result-list">
 </ul>
+
+<script>
+  const data = localStorage.getItem('stock_codes') || null
+  let li = ""
+  if (data) {
+     fetch('/stock/result', {
+    "method": "POST",
+    "headers": {"Content-Type": "application/json"},
+    "body": data,
+  }).then(response => response?.json())
+    .then(data => {
+      li = data?.map(item => {
+        if (item.includes("Error")) return alert('Wrong stock codes here, please reset !')
+        return `<li class="list-group-item">${ item }</li>`
+      })?.join("")
+      if (!li) { li = `<li class="list-group-item">還沒有清單呢！趕快按設定追蹤股票 :)</li>`}
+  document.querySelector('ul').innerHTML = li
+    })
+  } else {
+      if (!li) { li = `<li class="list-group-item">還沒有清單呢！</br>趕快按設定追蹤股票 :)</li>`}
+  document.querySelector('ul').innerHTML = li }
+</script>
+
 
 {% endblock %}

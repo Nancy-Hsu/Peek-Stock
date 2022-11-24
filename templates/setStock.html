@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block main %}
+{% if error %}
+  <div class="alert alert-warning d-flex align-items-center alert-dismissible fade show px-2 py-1" role="alert">
+  <p class="my-1 mx-2"><strong>Please re-try！</strong> <br>
+ Wrong stock code：<strong>
+  {% for i in error %}
+    {{i}}  
+  {% endfor %}
+  </strong> </p>
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+ 
+{% endif %}
+<form method="post" class="m-2">
+{% for i in range(1, 6) %}
+  <div class="form-group row">
+    <label for="stock-code{{i}}" class="col-md-4 col-form-label">股票代號 {{i}}</label>
+    <div class="col-md-8 mt-1">
+      <input type="number" class="form-control stock-input px2 py-1" id="stock-code{{i}}" name="stockCode{{i}}" placeholder="Stock Code">
+    </div>
+  </div>
+{% endfor %}
+  <div class="form-group row d-flex flex-row-reverse">
+    <div class="col-sm-8">
+      <button type="button" class="btn btn-dark mt-2 px2 py-1 " onclick="setLocalStorage()">submit</button>
+    </div>
+    <div class="col-sm-4">
+      <a href="/stock" class="btn btn-outline-dark mt-2 px2 py-1">Return</a>
+    </div>
+    
+  </div>
+</form>
+
+<script>
+let inputs = document.querySelectorAll('.stock-input')
+const codes_storaged = JSON.parse(localStorage.getItem('stock_codes')) || null
+if (codes_storaged) {
+  const codes_values = Object.values(codes_storaged)
+  codes_values.forEach((value, index) => {
+    inputs[index].value = value
+  })
+}
+
+const setLocalStorage = () => {
+  const form = document.querySelector('form')
+  const codes_inputted = {}
+  Array.from(inputs).forEach(input => {
+    if (!input.value) return 
+    codes_inputted[input.name] = input.value.trim()
+     })
+     localStorage.setItem("stock_codes", JSON.stringify(codes_inputted))
+  form.submit()
+}
+</script>
+{% endblock %}

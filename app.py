@@ -1,29 +1,39 @@
-from flask import Flask, render_template
-from concurrent.futures import ThreadPoolExecutor
-from scraper import getStock
+from flask import Flask, render_template, request, redirect, url_for
+from crawlerHelper import getStock, map_together, get_url, get_error, get_value_from_request
+crawler_url = 'https://tw.stock.yahoo.com/quote/'
 
 app = Flask(__name__)
 
 app.config['DEBUG'] = True
+stock_lst = []
 
-@app.route("/")
-def hello():
-    return "Hello, World!"
+@app.route("/stock/setting", methods=['POST', 'GET'])
+def putStock():
+    if request.method == 'POST':
+        stock_codes = get_value_from_request(request.form)
+        stock_urls = map_together(get_url, stock_codes)
+        stock_results = map_together(getStock, stock_urls)
+        error_codes = list(
+            filter(None, map_together(get_error, stock_results)))
+       
+        if error_codes:
+            return render_template('setStock.html', error=error_codes)
+        return redirect(url_for('stock'))
+    else:
+        return render_template('setStock.html')
+
 
 @app.route("/stock")
 def stock():
-  stock_urls = [
-      'https://tw.stock.yahoo.com/quote/2330',
-      'https://tw.stock.yahoo.com/quote/2330',
-      'https://tw.stock.yahoo.com/quote/2317',
-      'https://tw.stock.yahoo.com/quote/6547'
-  ]
-  executor = ThreadPoolExecutor()
-  with ThreadPoolExecutor() as executor:
-    data = list(executor.map(getStock, stock_urls))
-  
-  
-  return render_template('home.html', data = data)
+    return render_template('home.html')
 
+
+@app.route("/stock/result", methods=['POST'])
+def get_stock_result():
+    codes_storage = list(request.get_json().values()) 
+    stock_urls = map_together(get_url, codes_storage)  
+    data = map_together(getStock, stock_urls)
+    return data
+    
 if __name__ == "__main__":
-  app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)
